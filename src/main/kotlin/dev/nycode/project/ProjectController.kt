@@ -1,8 +1,7 @@
 package dev.nycode.project
 
-import dev.nycode.project.responses.ProjectResponse
-import dev.nycode.project.responses.ProjectsResponse
-import dev.nycode.project.responses.VersionGroupResponse
+import dev.nycode.build.Change
+import dev.nycode.project.responses.*
 import dev.nycode.version.VersionGroupService
 import dev.nycode.version.VersionService
 import io.micronaut.http.MediaType
@@ -13,6 +12,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import java.time.Instant
 
 @Controller("/projects", produces = [MediaType.APPLICATION_JSON])
 class ProjectController(
@@ -42,5 +42,26 @@ class ProjectController(
             groupService.findByNameAndProject(versionGroupName, project.id) ?: throw VersionGroupNotFoundException()
         val versions = versionService.findByGroupId(versionGroup.id).map { it.name }.toList()
         return VersionGroupResponse(project.name, project.friendlyName, versionGroup.name, versions)
+    }
+
+    @Get("/{project}/version_group/{versionGroupName}/builds")
+    suspend fun getVersionGroupBuilds(
+        @PathVariable("project") name: String,
+        versionGroupName: String
+    ): VersionGroupBuildsResponse = coroutineScope {
+        val project = projectService.findByName(name) ?: throw ProjectNotFoundException()
+        val versionGroup =
+            groupService.findByNameAndProject(versionGroupName, project.id) ?: throw VersionGroupNotFoundException()
+        val versions = async { versionService.findByGroupId(versionGroup.id).map { it.name }.toList() }
+        VersionGroupBuildsResponse(
+            project.name, project.friendlyName, versionGroup.name, versions.await(), listOf(
+                VersionGroupBuild(
+                    1,
+                    Instant.now(),
+                    listOf(Change("Hello World", "Hello World", "Hello World")),
+                    Download("paper.jar", "187")
+                )
+            )
+        )
     }
 }
