@@ -2,7 +2,7 @@ package dev.nycode.project
 
 import dev.nycode.project.responses.ProjectResponse
 import dev.nycode.project.responses.ProjectsResponse
-import dev.nycode.version.VersionGroup
+import dev.nycode.project.responses.VersionGroupResponse
 import dev.nycode.version.VersionGroupService
 import dev.nycode.version.VersionService
 import io.micronaut.http.MediaType
@@ -13,7 +13,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.flow.toSet
 
 @Controller("/projects", produces = [MediaType.APPLICATION_JSON])
 class ProjectController(
@@ -34,5 +33,14 @@ class ProjectController(
         val groups = async { groupService.findByProject(project.id).map { it.name }.toList() }
         val versions = async { versionService.findByProject(project.id).map { it.name }.toList() }
         ProjectResponse(project.name, project.friendlyName, groups.await(), versions.await())
+    }
+
+    @Get("/{project}/version_group/{versionGroupName}")
+    suspend fun getVersionGroup(@PathVariable("project") name: String, versionGroupName: String): VersionGroupResponse {
+        val project = projectService.findByName(name) ?: throw ProjectNotFoundException()
+        val versionGroup =
+            groupService.findByNameAndProject(versionGroupName, project.id) ?: throw VersionGroupNotFoundException()
+        val versions = versionService.findByGroupId(versionGroup.id).map { it.name }.toList()
+        return VersionGroupResponse(project.name, project.friendlyName, versionGroup.name, versions)
     }
 }

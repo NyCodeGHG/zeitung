@@ -4,12 +4,13 @@ import dev.nycode.project.Project
 import io.micronaut.context.annotation.Property
 import jakarta.inject.Singleton
 import kotlinx.coroutines.flow.Flow
-import org.litote.kmongo.Id
-import org.litote.kmongo.and
+import kotlinx.coroutines.runBlocking
+import org.bson.types.ObjectId
+import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineClient
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.coroutine.coroutine
-import org.litote.kmongo.eq
+import org.litote.kmongo.id.toId
 import org.litote.kmongo.util.KMongoUtil
 
 @Singleton

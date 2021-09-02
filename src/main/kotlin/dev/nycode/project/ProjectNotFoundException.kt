@@ -1,3 +1,3 @@
 package dev.nycode.project
 
-class ProjectNotFoundException : Exception("no such project")
+class ProjectNotFoundException : ZeitungException("no such project")
