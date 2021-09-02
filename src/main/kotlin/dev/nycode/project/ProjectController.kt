@@ -1,5 +1,6 @@
 package dev.nycode.project
 
+import dev.nycode.build.BuildService
 import dev.nycode.build.Change
 import dev.nycode.project.responses.*
 import dev.nycode.version.VersionGroupService
@@ -18,7 +19,8 @@ import java.time.Instant
 class ProjectController(
     private val projectService: ProjectService,
     private val versionService: VersionService,
-    private val groupService: VersionGroupService
+    private val groupService: VersionGroupService,
+    private val buildService: BuildService
 ) {
 
     @Get
@@ -63,5 +65,21 @@ class ProjectController(
                 )
             )
         )
+    }
+
+    @Get("/{project}/versions/{version}")
+    suspend fun getVersion(
+        @PathVariable("project") projectName: String,
+        @PathVariable("version") versionName: String
+    ): VersionResponse {
+        val project = projectService.findByName(projectName) ?: throw ProjectNotFoundException()
+        val version = versionService.findByNameAndProject(versionName, project.id) ?: throw VersionNotFoundException()
+        val builds = buildService.retrieveBuilds(project.name, version.name)
+            .toList()
+            .asSequence()
+            .sortedBy { it.time }
+            .map { it.number }
+            .toList()
+        return VersionResponse(project.name, project.friendlyName, version.name, builds)
     }
 }
