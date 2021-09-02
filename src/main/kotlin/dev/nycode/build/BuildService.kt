@@ -5,16 +5,17 @@ import kotlinx.coroutines.flow.Flow
 interface BuildService {
 
     /**
-     * Retrieves a build from an external source (e.g. CI Server) with the given project name and build number.
+     * Retrieves a build from an external source (e.g. CI Server) with the given project name, build number and version.
      *
-     * @param project the project the build belongs to
+     * @param projectName the project the build belongs to
+     * @param versionName the build's version
      * @param number the number of the build
      */
-    suspend fun retrieveBuild(project: String, number: Int): Build
+    suspend fun retrieveBuild(projectName: String, versionName: String, number: Int): Build
 
     /**
      * Retrieves all builds from an external source (e.g. CI Server) from the given project and version.
      */
-    fun retrieveBuilds(project: String, version: String): Flow<Build>
+    suspend fun retrieveBuilds(projectName: String, versionName: String): Flow<Build>
 
 }
