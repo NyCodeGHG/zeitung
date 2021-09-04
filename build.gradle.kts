@@ -56,8 +56,4 @@ tasks {
             jvmTarget = "11"
         }
     }
-
-    dockerBuild {
-        images.set(listOf("${System.getenv("DOCKER_IMAGE") ?: project.name}:$project.version"))
-    }
 }
