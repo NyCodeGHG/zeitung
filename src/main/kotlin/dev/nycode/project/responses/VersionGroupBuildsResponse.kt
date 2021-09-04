@@ -1,5 +1,6 @@
 package dev.nycode.project.responses
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.JsonSerializer
@@ -15,13 +16,16 @@ class VersionGroupBuildsResponse(
     val projectName: String,
     @JsonProperty("version_group")
     val versionGroup: String,
+    @JsonInclude
     val versions: List<String>,
+    @JsonInclude
     val builds: List<VersionGroupBuild>
 )
 
 class VersionGroupBuild(
     val build: Int,
     val time: Instant,
+    @JsonInclude
     val changes: List<Change>,
     val downloads: Download
 )

@@ -1,7 +1,6 @@
 package dev.nycode.project
 
 import dev.nycode.build.BuildService
-import dev.nycode.build.Change
 import dev.nycode.project.responses.*
 import dev.nycode.version.VersionGroupService
 import dev.nycode.version.VersionService
@@ -13,7 +12,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import java.time.Instant
 
 @Controller("/projects", produces = [MediaType.APPLICATION_JSON])
 class ProjectController(
@@ -55,15 +53,24 @@ class ProjectController(
         val versionGroup =
             groupService.findByNameAndProject(versionGroupName, project.id) ?: throw VersionGroupNotFoundException()
         val versions = async { versionService.findByGroupId(versionGroup.id).map { it.name }.toList() }
+        val builds = async {
+            buildService.findByVersionGroup(versionGroup.id)
+                .map {
+                    VersionGroupBuild(
+                        it.number,
+                        it.time,
+                        it.changes,
+                        Download(it.download.fileName, it.download.sha256)
+                    )
+                }
+                .toList()
+        }
         VersionGroupBuildsResponse(
-            project.name, project.friendlyName, versionGroup.name, versions.await(), listOf(
-                VersionGroupBuild(
-                    1,
-                    Instant.now(),
-                    listOf(Change("Hello World", "Hello World", "Hello World")),
-                    Download("paper.jar", "187")
-                )
-            )
+            project.name,
+            project.friendlyName,
+            versionGroup.name,
+            versions.await(),
+            builds.await()
         )
     }
 
@@ -74,12 +81,7 @@ class ProjectController(
     ): VersionResponse {
         val project = projectService.findByName(projectName) ?: throw ProjectNotFoundException()
         val version = versionService.findByNameAndProject(versionName, project.id) ?: throw VersionNotFoundException()
-        val builds = buildService.retrieveBuilds(project.name, version.name)
-            .toList()
-            .asSequence()
-            .sortedBy { it.time }
-            .map { it.number }
-            .toList()
+        val builds = buildService.findByVersion(version.id).map { it.number }.toList()
         return VersionResponse(project.name, project.friendlyName, version.name, builds)
     }
 }

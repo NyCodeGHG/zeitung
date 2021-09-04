@@ -13,5 +13,12 @@ data class Build(
     val versionId: Id<Version>,
     val number: Int,
     val time: Instant,
-    val changes: List<Change>
+    val changes: List<Change>,
+    val download: BuildDownload
+)
+
+data class BuildDownload(
+    val url: String,
+    val fileName: String,
+    val sha256: String
 )
