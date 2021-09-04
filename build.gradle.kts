@@ -32,10 +32,6 @@ dependencies {
     implementation("javax.annotation:javax.annotation-api")
     implementation(kotlin("reflect"))
     runtimeOnly("ch.qos.logback:logback-classic")
-    testImplementation("org.testcontainers:junit-jupiter")
-    testImplementation("org.testcontainers:mongodb")
-    testImplementation("org.testcontainers:testcontainers")
-    compileOnly("org.graalvm.nativeimage:svm")
 
     implementation("io.micronaut:micronaut-validation")
 
@@ -44,24 +40,24 @@ dependencies {
     implementation("org.litote.kmongo:kmongo-coroutine:4.2.8")
 }
 
-
 application {
     mainClass.set("dev.nycode.ApplicationKt")
 }
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(11))
     }
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-}
-
 tasks {
-    dockerBuildNative {
-        images.add("${System.getenv("DOCKER_IMAGE") ?: project.name}:$project.version")
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = "11"
+        }
+    }
+
+    dockerBuild {
+        images.set(listOf("${System.getenv("DOCKER_IMAGE") ?: project.name}:$project.version"))
     }
 }

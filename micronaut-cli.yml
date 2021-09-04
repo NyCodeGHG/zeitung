@@ -3,4 +3,4 @@ defaultPackage: dev.nycode
 testFramework: junit
 sourceLanguage: kotlin
 buildTool: gradle_kotlin
-features: [annotation-api, app-name, config4k, github-workflow-graal-docker-registry, graalvm, gradle, http-client, junit, kotlin, kotlin-application, kotlin-extension-functions, logback, mongo-reactive, netty-server, readme, shade, testcontainers]
+features: [annotation-api, app-name, config4k, gradle, http-client, junit, kotlin, kotlin-application, kotlin-extension-functions, logback, mongo-reactive, netty-server, readme, shade, testcontainers]
