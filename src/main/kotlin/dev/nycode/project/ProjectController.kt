@@ -84,4 +84,25 @@ class ProjectController(
         val builds = buildService.findByVersion(version.id).map { it.number }.toList()
         return VersionResponse(project.name, project.friendlyName, version.name, builds)
     }
+
+    @Get("/{project}/versions/{version}/builds/{build}")
+    suspend fun getVersionBuild(
+        @PathVariable("project") projectName: String,
+        @PathVariable("version") versionName: String,
+        @PathVariable("build") buildNumber: Int
+    ): BuildResponse {
+        val project = projectService.findByName(projectName) ?: throw ProjectNotFoundException()
+        val version = versionService.findByNameAndProject(versionName, project.id) ?: throw VersionNotFoundException()
+        val build = buildService.findByVersionAndNumber(version.id, buildNumber) ?: throw BuildNotFoundException()
+        val download = Download(build.download.fileName, build.download.sha256)
+        return BuildResponse(
+            project.name,
+            project.friendlyName,
+            version.name,
+            build.number,
+            build.time,
+            build.changes,
+            download
+        )
+    }
 }
