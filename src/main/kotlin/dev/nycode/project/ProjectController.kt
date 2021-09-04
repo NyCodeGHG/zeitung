@@ -2,8 +2,10 @@ package dev.nycode.project
 
 import dev.nycode.build.BuildService
 import dev.nycode.project.responses.*
+import dev.nycode.version.Version
 import dev.nycode.version.VersionGroupService
 import dev.nycode.version.VersionService
+import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
@@ -12,6 +14,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import java.net.URI
+import java.net.URL
 
 @Controller("/projects", produces = [MediaType.APPLICATION_JSON])
 class ProjectController(
@@ -91,8 +95,7 @@ class ProjectController(
         @PathVariable("version") versionName: String,
         @PathVariable("build") buildNumber: Int
     ): BuildResponse {
-        val project = projectService.findByName(projectName) ?: throw ProjectNotFoundException()
-        val version = versionService.findByNameAndProject(versionName, project.id) ?: throw VersionNotFoundException()
+        val (project, version) = findProjectAndVersion(projectName, versionName)
         val build = buildService.findByVersionAndNumber(version.id, buildNumber) ?: throw BuildNotFoundException()
         val download = Download(build.download.fileName, build.download.sha256)
         return BuildResponse(
@@ -104,5 +107,26 @@ class ProjectController(
             build.changes,
             download
         )
+    }
+
+    @Get("/{project}/versions/{version}/builds/{build}/downloads/{download}")
+    suspend fun downloadBuild(
+        @PathVariable("project") projectName: String,
+        @PathVariable("version") versionName: String,
+        @PathVariable("build") buildNumber: Int,
+        @PathVariable("download") fileName: String
+    ): HttpResponse<Nothing> {
+        val (project, version) = findProjectAndVersion(projectName, versionName)
+        val build = buildService.findByVersionAndNumber(version.id, buildNumber) ?: throw BuildNotFoundException()
+        return HttpResponse.redirect(URI.create(build.download.url))
+    }
+
+    private suspend fun findProjectAndVersion(
+        projectName: String,
+        versionName: String
+    ): Pair<Project, Version> {
+        val project = projectService.findByName(projectName) ?: throw ProjectNotFoundException()
+        val version = versionService.findByNameAndProject(versionName, project.id) ?: throw VersionNotFoundException()
+        return Pair(project, version)
     }
 }
