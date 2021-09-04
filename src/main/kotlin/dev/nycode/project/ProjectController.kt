@@ -118,7 +118,7 @@ class ProjectController(
         @PathVariable("build") buildNumber: Int,
         @PathVariable("download") fileName: String
     ): HttpResponse<Nothing> {
-        val (project, version) = findProjectAndVersion(projectName, versionName)
+        val (_, version) = findProjectAndVersion(projectName, versionName)
         val build = buildService.findByVersionAndNumber(version.id, buildNumber) ?: throw BuildNotFoundException()
         return HttpResponse.redirect(URI.create(build.download.url))
     }
