@@ -5,9 +5,11 @@ import dev.nycode.project.responses.*
 import dev.nycode.version.Version
 import dev.nycode.version.VersionGroupService
 import dev.nycode.version.VersionService
+import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType
 import io.micronaut.http.annotation.Controller
+import io.micronaut.http.annotation.Error
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
 import kotlinx.coroutines.async
@@ -128,5 +130,13 @@ class ProjectController(
         val project = projectService.findByName(projectName) ?: throw ProjectNotFoundException()
         val version = versionService.findByNameAndProject(versionName, project.id) ?: throw VersionNotFoundException()
         return Pair(project, version)
+    }
+
+    @Error
+    fun errorHandler(request: HttpRequest<*>, e: ZeitungException): HttpResponse<RequestError> {
+        if (e.message == null) {
+            return HttpResponse.serverError()
+        }
+        return HttpResponse.notFound(RequestError(e.message!!))
     }
 }
