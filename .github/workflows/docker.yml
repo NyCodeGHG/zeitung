@@ -18,10 +18,10 @@ jobs:
         env:
           DOCKER_REPOSITORY_PATH: ${{ secrets.DOCKER_REPOSITORY_PATH }}
           DOCKER_REGISTRY_URL: ${{ secrets.DOCKER_REGISTRY_URL }}
-        run: docker build . -t $(echo ${DOCKER_REGISTRY_URL}/${DOCKER_REPOSITORY_PATH}/zeitung" | sed -e 's#//#/#' -e 's#^/##')
+        run: docker build . -t $(echo ${DOCKER_REGISTRY_URL}/${DOCKER_REPOSITORY_PATH}/zeitung | sed -e 's#//#/#' -e 's#^/##')
 
       - name: Push Docker Image
         env:
           DOCKER_REPOSITORY_PATH: ${{ secrets.DOCKER_REPOSITORY_PATH }}
           DOCKER_REGISTRY_URL: ${{ secrets.DOCKER_REGISTRY_URL }}
-        run: docker push $(echo ${DOCKER_REGISTRY_URL}/${DOCKER_REPOSITORY_PATH}/zeitung" | sed -e 's#//#/#' -e 's#^/##')
+        run: docker push $(echo ${DOCKER_REGISTRY_URL}/${DOCKER_REPOSITORY_PATH}/zeitung | sed -e 's#//#/#' -e 's#^/##')
