@@ -24,6 +24,7 @@ micronaut {
 
 dependencies {
     kapt("io.micronaut:micronaut-http-validation")
+    kapt("io.micronaut.openapi:micronaut-openapi:3.0.2")
     kapt("io.micronaut.security:micronaut-security-annotations")
     implementation("io.micronaut:micronaut-http-client")
     implementation("io.micronaut:micronaut-runtime")
@@ -41,6 +42,7 @@ dependencies {
 
     implementation("org.litote.kmongo:kmongo-coroutine:4.2.8")
     implementation("de.nycode:bcrypt:2.1.3")
+    implementation("io.swagger.core.v3:swagger-annotations")
 }
 
 application {
