@@ -33,4 +33,8 @@ class VersionGroupService(
 
     fun findByProject(projectId: Id<Project>): Flow<VersionGroup> =
         collection.find(VersionGroup::projectId eq projectId).toFlow()
+
+    suspend fun createVersionGroup(versionGroup: VersionGroup) {
+        collection.save(versionGroup)
+    }
 }

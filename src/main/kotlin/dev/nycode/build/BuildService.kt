@@ -13,4 +13,6 @@ interface BuildService {
     suspend fun findByVersionGroup(versionGroupId: Id<VersionGroup>): Flow<Build>
 
     suspend fun findByVersionAndNumber(versionId: Id<Version>, number: Int): Build?
+
+    suspend fun createBuild(number: Int, versionId: Id<Version>, changes: List<Change>, download: BuildDownload): Build
 }

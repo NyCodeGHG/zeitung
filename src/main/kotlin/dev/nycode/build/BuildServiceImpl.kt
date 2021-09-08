@@ -1,5 +1,6 @@
 package dev.nycode.build
 
+import dev.nycode.project.BuildAlreadyExistsException
 import dev.nycode.version.Version
 import dev.nycode.version.VersionGroup
 import dev.nycode.version.VersionService
@@ -8,14 +9,12 @@ import jakarta.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import org.litote.kmongo.Id
-import org.litote.kmongo.`in`
-import org.litote.kmongo.and
+import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineClient
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.coroutine.coroutine
-import org.litote.kmongo.eq
 import org.litote.kmongo.util.KMongoUtil
+import java.time.Instant
 
 @Singleton
 class BuildServiceImpl(
@@ -46,5 +45,20 @@ class BuildServiceImpl(
 
     override suspend fun findByVersionAndNumber(versionId: Id<Version>, number: Int): Build? {
         return collection.findOne(and(Build::versionId eq versionId, Build::number eq number))
+    }
+
+    override suspend fun createBuild(
+        number: Int,
+        versionId: Id<Version>,
+        changes: List<Change>,
+        download: BuildDownload
+    ): Build {
+        if (collection.findOne(and(Build::number eq number, Build::versionId eq versionId)) != null) {
+            throw BuildAlreadyExistsException()
+        }
+
+        val build = Build(newId(), versionId, number, Instant.now(), changes, download)
+        collection.save(build)
+        return build
     }
 }

@@ -1,16 +1,14 @@
 package dev.nycode.version
 
 import dev.nycode.project.Project
+import dev.nycode.project.VersionAlreadyExistsException
 import io.micronaut.context.annotation.Property
 import jakarta.inject.Singleton
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.runBlocking
-import org.bson.types.ObjectId
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.CoroutineClient
 import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.coroutine.coroutine
-import org.litote.kmongo.id.toId
 import org.litote.kmongo.util.KMongoUtil
 
 @Singleton
@@ -37,4 +35,13 @@ class VersionService(
 
     fun findByGroupId(groupId: Id<VersionGroup>): Flow<Version> =
         collection.find(Version::groupId eq groupId).toFlow()
+
+    suspend fun createVersion(name: String, projectId: Id<Project>, versionGroupId: Id<VersionGroup>): Version {
+        if (collection.findOne(and(Version::projectId eq projectId, Version::name eq name)) != null) {
+            throw VersionAlreadyExistsException()
+        }
+        val version = Version(newId(), projectId, versionGroupId, name)
+        collection.save(version)
+        return version
+    }
 }

@@ -1,23 +1,27 @@
 package dev.nycode.project
 
 import dev.nycode.build.BuildService
+import dev.nycode.project.request.CreateBuildRequest
+import dev.nycode.project.request.CreateVersionRequest
 import dev.nycode.project.responses.*
+import dev.nycode.util.getLogger
 import dev.nycode.version.Version
+import dev.nycode.version.VersionGroup
 import dev.nycode.version.VersionGroupService
 import dev.nycode.version.VersionService
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MediaType
-import io.micronaut.http.annotation.Controller
-import io.micronaut.http.annotation.Error
-import io.micronaut.http.annotation.Get
-import io.micronaut.http.annotation.PathVariable
+import io.micronaut.http.annotation.*
+import io.micronaut.security.annotation.Secured
+import io.micronaut.security.rules.SecurityRule
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import org.litote.kmongo.newId
 import java.net.URI
-import java.net.URL
+import java.security.Principal
 
 @Controller("/projects", produces = [MediaType.APPLICATION_JSON])
 class ProjectController(
@@ -26,6 +30,10 @@ class ProjectController(
     private val groupService: VersionGroupService,
     private val buildService: BuildService
 ) {
+
+    companion object {
+        private val logger = getLogger<ProjectController>()
+    }
 
     @Get
     suspend fun listProjects(): ProjectsResponse {
@@ -48,6 +56,20 @@ class ProjectController(
             groupService.findByNameAndProject(versionGroupName, project.id) ?: throw VersionGroupNotFoundException()
         val versions = versionService.findByGroupId(versionGroup.id).map { it.name }.toList()
         return VersionGroupResponse(project.name, project.friendlyName, versionGroup.name, versions)
+    }
+
+    @Secured(SecurityRule.IS_AUTHENTICATED)
+    @Put("/{project}/version_group/{versionGroupName}")
+    suspend fun createVersionGroup(
+        @PathVariable("project") projectName: String,
+        versionGroupName: String,
+        principal: Principal
+    ): VersionGroupResponse {
+        val project = projectService.findByName(projectName) ?: throw ProjectNotFoundException()
+        val versionGroup = VersionGroup(newId(), project.id, versionGroupName)
+        groupService.createVersionGroup(versionGroup)
+        logger.info("User ${principal.name} created version group '${versionGroup.name}' in project ${project.name}")
+        return VersionGroupResponse(project.name, project.friendlyName, versionGroup.name, emptyList())
     }
 
     @Get("/{project}/version_group/{versionGroupName}/builds")
@@ -85,10 +107,24 @@ class ProjectController(
         @PathVariable("project") projectName: String,
         @PathVariable("version") versionName: String
     ): VersionResponse {
-        val project = projectService.findByName(projectName) ?: throw ProjectNotFoundException()
-        val version = versionService.findByNameAndProject(versionName, project.id) ?: throw VersionNotFoundException()
+        val (project, version) = findProjectAndVersion(projectName, versionName)
         val builds = buildService.findByVersion(version.id).map { it.number }.toList()
         return VersionResponse(project.name, project.friendlyName, version.name, builds)
+    }
+
+    @Secured(SecurityRule.IS_AUTHENTICATED)
+    @Post("/{project}/versions")
+    suspend fun createVersion(
+        @PathVariable("project") projectName: String,
+        @Body body: CreateVersionRequest,
+        principal: Principal
+    ): VersionResponse {
+        val project = projectService.findByName(projectName) ?: throw ProjectNotFoundException()
+        val versionGroup =
+            groupService.findByNameAndProject(body.versionGroup, project.id) ?: throw VersionGroupNotFoundException()
+        val version = versionService.createVersion(body.name, project.id, versionGroup.id)
+        logger.info("User ${principal.name} created version '${version.name}' in project ${project.name}")
+        return VersionResponse(project.name, project.friendlyName, version.name, emptyList())
     }
 
     @Get("/{project}/versions/{version}/builds/{build}")
@@ -108,6 +144,28 @@ class ProjectController(
             build.time,
             build.changes,
             download
+        )
+    }
+
+    @Secured(SecurityRule.IS_AUTHENTICATED)
+    @Post("/{project}/versions/{version}/builds")
+    suspend fun createBuild(
+        @PathVariable("project") projectName: String,
+        @PathVariable("version") versionName: String,
+        @Body body: CreateBuildRequest,
+        principal: Principal
+    ): BuildResponse {
+        val (project, version) = findProjectAndVersion(projectName, versionName)
+        val build = buildService.createBuild(body.number, version.id, body.changes, body.download)
+        logger.info("User ${principal.name} created build '${build.number}' for version ${version.name} in project ${project.name}")
+        return BuildResponse(
+            project.name,
+            project.friendlyName,
+            version.name,
+            build.number,
+            build.time,
+            build.changes,
+            Download(build.download.fileName, build.download.sha256)
         )
     }
 
