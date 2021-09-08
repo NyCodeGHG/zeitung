@@ -23,6 +23,7 @@ import org.litote.kmongo.newId
 import java.net.URI
 import java.security.Principal
 
+@Secured(SecurityRule.IS_ANONYMOUS)
 @Controller("/projects", produces = [MediaType.APPLICATION_JSON])
 class ProjectController(
     private val projectService: ProjectService,
