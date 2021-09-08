@@ -46,7 +46,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("dev.nycode.ApplicationKt")
+    mainClass.set("dev.nycode.Application")
 }
 
 java {
