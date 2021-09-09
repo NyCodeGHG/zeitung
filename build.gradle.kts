@@ -28,6 +28,8 @@ dependencies {
     kapt("io.micronaut.security:micronaut-security-annotations")
     implementation("io.micronaut:micronaut-http-client")
     implementation("io.micronaut:micronaut-runtime")
+    implementation("io.micronaut.reactor:micronaut-reactor")
+    implementation("io.micronaut.reactor:micronaut-reactor-http-client")
     implementation("io.micronaut.security:micronaut-security-jwt")
     implementation("io.micronaut.kotlin:micronaut-kotlin-extension-functions")
     implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
@@ -43,6 +45,7 @@ dependencies {
     implementation("org.litote.kmongo:kmongo-coroutine:4.2.8")
     implementation("de.nycode:bcrypt:2.1.3")
     implementation("io.swagger.core.v3:swagger-annotations")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.2")
 }
 
 application {

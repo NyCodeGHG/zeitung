@@ -1,6 +1,8 @@
 package dev.nycode.authentication
 
 import de.nycode.bcrypt.hash
+import de.nycode.bcrypt.verify
+import dev.nycode.util.getLogger
 import io.micronaut.context.annotation.Property
 import jakarta.inject.Singleton
 import kotlinx.coroutines.runBlocking
@@ -31,8 +33,12 @@ class AuthService(
     }
 
     suspend fun findUser(username: String, password: String): UserEntry? {
-        val hashedPassword: ByteArray = hash(password + salt)
-        return collection.findOne(and(UserEntry::username eq username, UserEntry::password eq hashedPassword))
+        val user = collection.findOne(UserEntry::username eq username) ?: return null
+        return if (verify(password + salt, user.password)) {
+            user
+        } else {
+            null
+        }
     }
 
     suspend fun createUser(username: String, password: String): UserEntry {

@@ -2,6 +2,7 @@ package dev.nycode.project
 
 import dev.nycode.build.BuildService
 import dev.nycode.project.request.CreateBuildRequest
+import dev.nycode.project.request.CreateProjectRequest
 import dev.nycode.project.request.CreateVersionRequest
 import dev.nycode.project.responses.*
 import dev.nycode.util.getLogger
@@ -48,6 +49,13 @@ class ProjectController(
         val groups = async { groupService.findByProject(project.id).map { it.name }.toList() }
         val versions = async { versionService.findByProject(project.id).map { it.name }.toList() }
         ProjectResponse(project.name, project.friendlyName, groups.await(), versions.await())
+    }
+
+    @Secured(SecurityRule.IS_AUTHENTICATED)
+    @Post
+    suspend fun createProject(@Body body: CreateProjectRequest): ProjectResponse {
+        val project = projectService.createProject(body.name, body.friendlyName)
+        return ProjectResponse(project.name, project.friendlyName, emptyList(), emptyList())
     }
 
     @Get("/{project}/version_group/{versionGroupName}")
