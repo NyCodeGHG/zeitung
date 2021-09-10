@@ -1,5 +1,7 @@
 package dev.nycode
 
+import dev.nycode.authentication.AuthService
+import io.micronaut.context.annotation.Requires
 import io.micronaut.runtime.Micronaut.*
 import io.swagger.v3.oas.annotations.OpenAPIDefinition
 import io.swagger.v3.oas.annotations.info.Contact
@@ -20,6 +22,7 @@ object Application {
     fun main(args: Array<String>) {
         build()
             .args(*args)
+            .eagerInitSingletons(true)
             .packages("dev.nycode")
             .start()
     }
